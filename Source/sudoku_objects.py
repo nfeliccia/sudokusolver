@@ -29,6 +29,9 @@ def create_initial_board():
     The purpose of this function is to create a blank board, and populate it with Sudoku cell objects.
     :return: Board Array - 9 x 9 array of blank SudokuCell Objects.
     """
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    # Create initial 9x9 square array.
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     board_array = np.array(np.zeros(shape=(9, 9), dtype=object))
     for cib_row in nine_range:
         for cib_col in nine_range:
@@ -42,8 +45,7 @@ class SudokuCell:
     """
 
     def __repr__(self):
-        remaining_unknowns = ','.join([f"{str(x)}" for x in self.get_remaining_unknowns()])
-        out_string = f"Row {self.row}, Col {self.column} {remaining_unknowns}"
+        out_string = f"Row {self.row}, Col {self.column}"
         return out_string
 
     def __init__(self, sudoku_cell_row: np.uint8 = None, sudoku_cell_column: np.uint8 = None):
@@ -91,9 +93,33 @@ class SudokuCell:
         return final_number
 
     def remove_values(self, removal_values: int | typing.Iterable):
+        """
+        The purpose of this function is to remove values from the list of eligible numbers in the cell which
+        is used for solving.
+        :param removal_values:
+        :return:
+        """
+
+        # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        # Handle instance of iterable. Set up function to handle iterable or integer
+        # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         if isinstance(removal_values, typing.Iterable):
+
+            # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            # Do the checking if the input value is an empty iterable here rather than further up in the code
+            # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            if not removal_values:
+                return False
+
+            # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            # If the remaining unknowns are 0 we've got a condition we shouldn't have  so raised an error
+            # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             if self.remaining_unknowns_count() == 0:
                 raise ValueError('shtf')
+
+            # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            # Call the eligible numbers class eliminate numbers
+            # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             self.eligible_numbers.eliminate_values(to_eliminate=removal_values)
         elif isinstance(removal_values, int | np.uint8):
             self.eligible_numbers.eliminate_value(to_eliminate=np.uint8(removal_values))
@@ -103,16 +129,43 @@ class SudokuCell:
         return hvie
 
     def remaining_unknowns_count(self):
+        """
+        The purpose of this function is to count up the number of remaining unknowns, regardless of what they are.
+        :return:
+        """
+        # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        # If there's only one unknown, then it's really not an unknown, it's a known, so we return there are 0 unknown
+        # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         bas = self.eligible_numbers.base_array.sum()
         if bas == 1:
             ruc = 0
         else:
             ruc = bas
+
+        # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        # Cast to numpy int 8 on the way out.
+        # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        ruc = np.uint8(ruc)
         return ruc
 
     def get_remaining_unknowns(self):
         ruc = self.eligible_numbers.get_values()
         return ruc
+
+    def cell_out_of_options(self) -> bool:
+        """
+        The purpose of this function is to determine if a cell is out of options, which is a bad condition we
+        really don't want.
+        :return: True if the cell is out of options.
+        :rtype: bool
+        """
+        enbas = self.eligible_numbers.base_array.sum()
+
+        # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        # return True if the sum is zero.
+        # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        cooo = not bool(enbas)
+        return cooo
 
 
 class SudokuBoard:
@@ -135,32 +188,80 @@ class SudokuBoard:
         :param external_update_board: numpy array which holds the SudokuCell objects.  
         :return: 
         """
-        for uba_row, uba_column in CoordinatesList.coordinates_list():
-            this_sudoku_square = self.board[uba_row, uba_column]
-
+        all_board_cells = self.get_all_board_cells()
+        for board_cell in all_board_cells:
             # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             # Check if the input has a value in it for updating.
             # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-            input_board_array_value = external_update_board[uba_row, uba_column]
+            input_board_array_value = external_update_board[board_cell.row, board_cell.column]
             if input_board_array_value:
-                this_sudoku_square.eligible_numbers.set_value(set_value=input_board_array_value)
+                board_cell.eligible_numbers.set_value(set_value=input_board_array_value)
+
+    def get_all_board_cells(self):
+        """
+        The purpose of this function is to return a list of all cell objects on the board.
+        :return: Tuple of board cells
+        :rtype: tuple
+        """
+        cl = CoordinatesList.coordinates_list()
+        all_board_cells = tuple([self.board[ckc_row, ckc_column] for ckc_row, ckc_column in cl])
+        return all_board_cells
+
+    def get_all_unsolved_board_cells(self):
+        """
+        The purpose of this function is to return a list of all cell objects on the board which do *not* yet have a
+        solution.
+        :return: Tuple of board cells
+        :rtype: tuple
+        """
+
+        all_board_cells = self.get_all_board_cells()
+        all_unsolved_board_cells = [x for x in all_board_cells if not x.answer_found]
+        return all_unsolved_board_cells
 
     def count_known_cells(self):
         """
         The purpose of this function is to count the number of known cells to determine if iterations are paying off
 
-        :return:
+        :return: Number of known cells on the sudoku board
+        :rtype:np.uint8
         """
-        cl = CoordinatesList.coordinates_list()
-        known_count_list = np.array([self.board[ckc_row, ckc_row].answer_found for ckc_row, ckc_column in cl])
+        abc = self.get_all_board_cells()
+        known_count_list = np.array([x.answer_found for x in abc])
         known_counts = known_count_list.sum().astype(np.uint8)
         return known_counts
 
-    def get_board_wide_unkowns_count(self):
-        cl = CoordinatesList.coordinates_list()
-        gbwuc = np.array([self.board[gbw_row, gbw_column].remaining_unknowns_count() for gbw_row, gbw_column in cl])
-        board_wide_unknowns_count = gbwuc.sum()
+    def get_board_wide_unknowns_count(self, verbose=False):
+        """
+        The purpose of this function is to count the number of total unknown values across all cells.
+        This is an important value to determine progress being made
+        :return: Board wide count of unknowns
+        :rtype: np.uint16
+        """
+        bc = self.get_all_board_cells()
+        board_wide_unknowns_count = np.array([x.remaining_unknowns_count() for x in bc]).sum().astype(np.uint16)
+        if verbose:
+            print(f"board_wide_unknonws_count={board_wide_unknowns_count}")
         return board_wide_unknowns_count
+
+    def single_pass_of_known_neighbors(self):
+        """
+        The purpose of this function is to pass once through all cells and modify them based on the rules that
+        parent square can have only values 1-9
+        :return:
+        """
+        # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        # Iterate through each of the unsolved cells and modify based on neighbors.
+        # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        for b_cell in self.get_all_unsolved_board_cells():
+            # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            # Get neighbor cells based on coordinates, extract the known values into a tuple and pass to the cell
+            # remove method.
+            # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            b_cell_neighbor_cells = tuple(self.board[n_row, n_column] for n_row, n_column in b_cell.neighbor_list)
+            cvfn = tuple(x.get_correct_answer_value() for x in b_cell_neighbor_cells if x.answer_found)
+            correct_values_from_neighbor_cells = cvfn
+            b_cell.remove_values(removal_values=correct_values_from_neighbor_cells)
 
     def remove_known_neighbors(self, verbose=False):
         """
@@ -169,41 +270,15 @@ class SudokuBoard:
         :return:
         """
         print(f"**removing known neighbors**")
-        # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        # Modify coordinates list to eliminate known cells
-        # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        cl = CoordinatesList.coordinates_list()
 
+        # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        # Loop and call the single pass of known neighbors until the improvement is zero.
+        # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         keep_going = True
         while keep_going:
-            before_unknowns = self.get_board_wide_unkowns_count()
-            if verbose:
-                print(f"{before_unknowns=}", end='\t')
-            for rkn_row, rkn_column in cl:
-                # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                # Extract the cell at the iterated position
-                # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                b_cell = self.board[rkn_row, rkn_column]
-                if b_cell.answer_found:
-                    continue
-                b_cnl = b_cell.neighbor_list
-
-                # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                # Find coordinates of neighbors with known values.
-                # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                nwkn_coord = [(c_row, c_col) for c_row, c_col in b_cnl if self.board[c_row, c_col].answer_found]
-
-                # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                # neighbor cells known values
-                # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                ncwkv = [self.board[c_row, c_col].get_correct_answer_value() for c_row, c_col in nwkn_coord]
-
-                if not ncwkv:
-                    continue
-                else:
-                    b_cell.remove_values(removal_values=ncwkv)
-
-            after_unknowns = self.get_board_wide_unkowns_count()
+            before_unknowns = self.get_board_wide_unknowns_count()
+            self.single_pass_of_known_neighbors()
+            after_unknowns = self.get_board_wide_unknowns_count()
             known_improvement = before_unknowns - after_unknowns
             if verbose:
                 print(f"{after_unknowns=}\t{known_improvement=}")
@@ -229,25 +304,19 @@ class SudokuBoard:
         while keep_going:
             total_removed = 0
             round_counter += 1
+            known_count = self.count_known_cells()
 
-            # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-            # The coordinates list of all row, column combinations
-            # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-            cl = CoordinatesList.coordinates_list()
-            for b_row, b_col in cl:
+            for b_cell in self.get_all_unsolved_board_cells():
 
-                # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                # Read cell at coordinates and kick out if the answer found status is true.
-                # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                b_cell = self.board[b_row, b_col]
-                if b_cell.answer_found:
-                    continue
-
+                # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                # Benchmark how many unknowns there are in this cell
+                # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                 before_unknowns_count = b_cell.remaining_unknowns_count()
-                # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                # Get the same row and column from the cell
-                # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                current_board_column = self.board[:, b_col]
+
+                # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                # Get all the cells in the column
+                # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                current_board_column = self.board[:, b_cell.column]
                 cbc = current_board_column
 
                 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -268,10 +337,12 @@ class SudokuBoard:
                 unknowns_eliminated_this_cell = before_unknowns_count - after_unknowns_count
                 total_removed += unknowns_eliminated_this_cell
                 known_count = self.count_known_cells()
-                current_unknowns = self.get_board_wide_unkowns_count()
+                current_unknowns = self.get_board_wide_unknowns_count()
                 if verbose:
-                    print(f"Cell at Row {b_row} and Column {b_col}  removed {unknowns_eliminated_this_cell} "
-                          f"known count {known_count} total_removed {total_removed} \t current unknown {current_unknowns}")
+                    print(f"Cell at Row {b_cell.row} and Column {b_cell.column} "
+                          f"removed {unknowns_eliminated_this_cell} "
+                          f"known count {known_count} total_removed {total_removed} \t"
+                          f" current unknown {current_unknowns}")
                     print(f"Round {round_counter}")
 
             if known_count == 81 or total_removed == 0:
@@ -282,7 +353,7 @@ class SudokuBoard:
         The purpose of this function is to analyze rows and columns to solve a sudoku square
         :return:
         """
-
+        print(f"Row Solve")
         # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         # Set the while loop controls and a round counter.
         # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -295,37 +366,31 @@ class SudokuBoard:
         while keep_going:
             total_removed = 0
             round_counter += 1
+            known_count = self.count_known_cells()
 
-            # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-            # The coordinates list of all row, column combinations
-            # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-            cl = CoordinatesList.coordinates_list()
-            for b_row, b_col in cl:
+            for b_cell in self.get_all_unsolved_board_cells():
 
-                # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                # Read cell at coordinates and kick out if the answer found status is true.
-                # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                b_cell = self.board[b_row, b_col]
-                if b_cell.answer_found:
-                    continue
-
+                # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                # Benchmark how many unknowns there are in this cell
+                # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                 before_unknowns_count = b_cell.remaining_unknowns_count()
-                # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                # Get the same row and column from the cell
-                # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                current_board_row = self.board[b_row, :]
+
+                # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                # Get all the cells in the column
+                # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                current_board_row = self.board[b_cell.row, :]
                 cbr = current_board_row
 
                 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                 # Get the known values out of the current rows and columns. Use set logic to find where the remaining
                 # unknowns overlap with the known values of the colinear row and column
                 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                row_knowns = set([x.get_correct_answer_value() for x in cbr if x.answer_found])
+                column_row_knowns = set([x.get_correct_answer_value() for x in cbr if x.answer_found])
 
                 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                 # remove the incremental values from this cell, if any
                 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                b_cell.remove_values(removal_values=row_knowns)
+                b_cell.remove_values(removal_values=column_row_knowns)
 
                 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                 # Evaluate the results and tally
@@ -334,10 +399,12 @@ class SudokuBoard:
                 unknowns_eliminated_this_cell = before_unknowns_count - after_unknowns_count
                 total_removed += unknowns_eliminated_this_cell
                 known_count = self.count_known_cells()
-                current_unknowns = self.get_board_wide_unkowns_count()
+                current_unknowns = self.get_board_wide_unknowns_count()
                 if verbose:
-                    print(f"Cell at Row {b_row} and Column {b_col}  removed {unknowns_eliminated_this_cell} "
-                          f"known count {known_count} total_removed {total_removed} \t current unknown {current_unknowns}")
+                    print(f"Cell at Row {b_cell.row} and Column {b_cell.column} "
+                          f"removed {unknowns_eliminated_this_cell} "
+                          f"known count {known_count} total_removed {total_removed} \t"
+                          f" current unknown {current_unknowns}")
                     print(f"Round {round_counter}")
 
             if known_count == 81 or total_removed == 0:
@@ -349,19 +416,38 @@ class SudokuBoard:
             for j in nine_range:
                 display_string += f"{self.board[i, j].get_correct_answer_value()} "
             display_string += '\n'
-        trailing_text = f"unknowns {self.get_board_wide_unkowns_count()} solved {self.count_known_cells()}\n\n"
+        trailing_text = f"unknowns {self.get_board_wide_unknowns_count()} solved {self.count_known_cells()}\n\n"
         display_string += trailing_text
         return display_string
 
-    def check_out_of_options(self):
-        cl = CoordinatesList.coordinates_list()
-        out_of_options_list = list()
-        for coo_row, coo_col in cl:
-            coo_cell = self.board[coo_row, coo_col]
-            remaining_options_count = coo_cell.eligible_numbers.base_array.sum()
-            if remaining_options_count == 0:
-                out_of_options_list.append((coo_row, coo_col))
-        if not out_of_options_list:
+    def check_if_any_cells_out_of_options(self, verbose=False):
+        """
+        The purpose of this function is to report if a cell has all the eligible numbers removed.
+        This is an error condition and should not happen.
+        :return:
+        """
+        all_board_cells = self.get_all_board_cells()
+
+        # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        # Use list comprehension because it is faster here.
+        # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        out_of_options_list = [(x.row, x.column) for x in all_board_cells if x.cell_out_of_options()]
+        if not out_of_options_list and verbose:
             print(f"Out of options check ok")
-        else:
+            return False
+        elif verbose:
             print(f"Out of options {copy(out_of_options_list)}")
+            return True
+        elif out_of_options_list:
+            raise ValueError("Out of options")
+
+    def verify_row_solved(self, row_index: np.uint8 = None) -> bool:
+
+        row_index = np.uint8(row_index)
+        row_values = self.board[row_index, :]
+        set_of_correct_values = set(x.get_correct_answer_value() for x in row_values)
+        # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        # THe length should be 9 if all distinct numbers are used, and so should the set if the duplicates are dropped
+        # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        row_solved = len(set_of_correct_values) == 9
+        return row_solved

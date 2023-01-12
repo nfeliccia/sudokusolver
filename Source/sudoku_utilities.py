@@ -7,185 +7,114 @@ from functools import lru_cache
 
 import numpy as np
 
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# This value is used several times so lets store it up here as global
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-nine_range = np.arange(0, 9).astype(np.uint8)
-
-
-@lru_cache(maxsize=3)
-def create_parent_square_array():
-    """
-    The purpose of this function is to create an array which maps each cell to it's parent square.
-
-    :return:
-    """
-    parent_square_array = np.zeros(shape=(9, 9), dtype=str)
-
-    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    # For something on this scale, tests have shown that a straight reading of numbers in code is faster than any
-    # looping
-    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    parent_square_array[0, 0] = 'a'
-    parent_square_array[0, 1] = 'a'
-    parent_square_array[0, 2] = 'a'
-    parent_square_array[0, 3] = 'b'
-    parent_square_array[0, 4] = 'b'
-    parent_square_array[0, 5] = 'b'
-    parent_square_array[0, 6] = 'c'
-    parent_square_array[0, 7] = 'c'
-    parent_square_array[0, 8] = 'c'
-    parent_square_array[1, 0] = 'a'
-    parent_square_array[1, 1] = 'a'
-    parent_square_array[1, 2] = 'a'
-    parent_square_array[1, 3] = 'b'
-    parent_square_array[1, 4] = 'b'
-    parent_square_array[1, 5] = 'b'
-    parent_square_array[1, 6] = 'c'
-    parent_square_array[1, 7] = 'c'
-    parent_square_array[1, 8] = 'c'
-    parent_square_array[2, 0] = 'a'
-    parent_square_array[2, 1] = 'a'
-    parent_square_array[2, 2] = 'a'
-    parent_square_array[2, 3] = 'b'
-    parent_square_array[2, 4] = 'b'
-    parent_square_array[2, 5] = 'b'
-    parent_square_array[2, 6] = 'c'
-    parent_square_array[2, 7] = 'c'
-    parent_square_array[2, 8] = 'c'
-    parent_square_array[3, 0] = 'd'
-    parent_square_array[3, 1] = 'd'
-    parent_square_array[3, 2] = 'd'
-    parent_square_array[3, 3] = 'e'
-    parent_square_array[3, 4] = 'e'
-    parent_square_array[3, 5] = 'e'
-    parent_square_array[3, 6] = 'f'
-    parent_square_array[3, 7] = 'f'
-    parent_square_array[3, 8] = 'f'
-    parent_square_array[4, 0] = 'd'
-    parent_square_array[4, 1] = 'd'
-    parent_square_array[4, 2] = 'd'
-    parent_square_array[4, 3] = 'e'
-    parent_square_array[4, 4] = 'e'
-    parent_square_array[4, 5] = 'e'
-    parent_square_array[4, 6] = 'f'
-    parent_square_array[4, 7] = 'f'
-    parent_square_array[4, 8] = 'f'
-    parent_square_array[5, 0] = 'd'
-    parent_square_array[5, 1] = 'd'
-    parent_square_array[5, 2] = 'd'
-    parent_square_array[5, 3] = 'e'
-    parent_square_array[5, 4] = 'e'
-    parent_square_array[5, 5] = 'e'
-    parent_square_array[5, 6] = 'f'
-    parent_square_array[5, 7] = 'f'
-    parent_square_array[5, 8] = 'f'
-    parent_square_array[6, 0] = 'g'
-    parent_square_array[6, 1] = 'g'
-    parent_square_array[6, 2] = 'g'
-    parent_square_array[6, 3] = 'h'
-    parent_square_array[6, 4] = 'h'
-    parent_square_array[6, 5] = 'h'
-    parent_square_array[6, 6] = 'i'
-    parent_square_array[6, 7] = 'i'
-    parent_square_array[6, 8] = 'i'
-    parent_square_array[7, 0] = 'g'
-    parent_square_array[7, 1] = 'g'
-    parent_square_array[7, 2] = 'g'
-    parent_square_array[7, 3] = 'h'
-    parent_square_array[7, 4] = 'h'
-    parent_square_array[7, 5] = 'h'
-    parent_square_array[7, 6] = 'i'
-    parent_square_array[7, 7] = 'i'
-    parent_square_array[7, 8] = 'i'
-    parent_square_array[8, 0] = 'g'
-    parent_square_array[8, 1] = 'g'
-    parent_square_array[8, 2] = 'g'
-    parent_square_array[8, 3] = 'h'
-    parent_square_array[8, 4] = 'h'
-    parent_square_array[8, 5] = 'h'
-    parent_square_array[8, 6] = 'i'
-    parent_square_array[8, 7] = 'i'
-    parent_square_array[8, 8] = 'i'
-
-    return parent_square_array
-
-
-@lru_cache(maxsize=3)
-def create_coordinates_list() -> tuple:
-    """
-    The purpose of this function is to create a list of the row,column coordinates on the board
-    :rtype: tuple
-    :return:
-    """
-    coordinates_list = list()
-    for ccl_row in nine_range:
-        for ccl_col in nine_range:
-            coordinates_list.append((ccl_row, ccl_col))
-    coordinates_out = tuple(coordinates_list)
-    return coordinates_out
-
-
-@lru_cache(maxsize=3)
-def create_neighbor_list_dictionary():
-    """
-    The purpose of this function is to create a dictionary where the keys are a tuple of the row and column,
-    and the values are a list of all cells with the same parent block (a..i)
-    :return:
-    """
-
-    coordinates_points_list = CoordinatesList.coordinates_list()
-    patent_square_array = PatentSquareArray.patent_square_array()
-    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    # Create collector list and iterate through the coordinate points list
-    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    neighbor_list_dict = dict()
-    for anltc_row, anltc_col in coordinates_points_list:
-        neighbor_collector_list = list()
-        serving_cell_letter = patent_square_array[anltc_row, anltc_col]
-        for neighbor_row in nine_range:
-            for neighbor_col in nine_range:
-                # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                # Avoid adding self as neighbor
-                # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                if (neighbor_row == anltc_row) and (neighbor_col == anltc_col):
-                    continue
-
-                # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                # Get the name of the big block this cell belongs to
-                # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                neighbor_letter = patent_square_array[neighbor_row, neighbor_col]
-                if neighbor_letter == serving_cell_letter:
-                    neighbor_collector_list.append((neighbor_row, neighbor_col))
-
-        # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        # Store the neighbor list as a tuple for memory efficiency
-        # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        neighbor_list_dict[(anltc_row, anltc_col)] = tuple(neighbor_collector_list)
-
-    return neighbor_list_dict
-
 
 class CoordinatesList:
     """
     The purose of this class is to wrap the coordinates list.
     """
 
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    # We use a static method since we dont' need any input. We wrap it in an LRU Cache so it doesn't have to go
+    # to the create_coordinates_list() function if its already been done. Bit time saver.
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
     @staticmethod
-    def coordinates_list():
-        cl = create_coordinates_list()
-        return cl
+    @lru_cache(maxsize=2)
+    def coordinates_list() -> tuple:
+        """
+        The purpose of this function is to create a list of the row,column coordinates on the board
+        :rtype: tuple
+        :return:
+
+        """
+        # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        # In limited scale, its faster to generate directly than through a loop
+        # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        coordinates_out = (
+            (0, 0), (0, 1), (0, 2), (0, 3), (0, 4), (0, 5), (0, 6), (0, 7), (0, 8), (1, 0), (1, 1), (1, 2), (1, 3),
+            (1, 4), (1, 5), (1, 6), (1, 7), (1, 8), (2, 0), (2, 1), (2, 2), (2, 3), (2, 4), (2, 5), (2, 6), (2, 7),
+            (2, 8), (3, 0), (3, 1), (3, 2), (3, 3), (3, 4), (3, 5), (3, 6), (3, 7), (3, 8), (4, 0), (4, 1), (4, 2),
+            (4, 3), (4, 4), (4, 5), (4, 6), (4, 7), (4, 8), (5, 0), (5, 1), (5, 2), (5, 3), (5, 4), (5, 5), (5, 6),
+            (5, 7), (5, 8), (6, 0), (6, 1), (6, 2), (6, 3), (6, 4), (6, 5), (6, 6), (6, 7), (6, 8), (7, 0), (7, 1),
+            (7, 2), (7, 3), (7, 4), (7, 5), (7, 6), (7, 7), (7, 8), (8, 0), (8, 1), (8, 2), (8, 3), (8, 4), (8, 5),
+            (8, 6), (8, 7), (8, 8))
+
+        return coordinates_out
 
 
 class PatentSquareArray:
     """
-    the purpose of this class is to wrap the patent_square array
+    the purpose of this class is to wrap  and deliver the patent_square array
     """
 
     @staticmethod
+    @lru_cache(maxsize=3)
     def patent_square_array():
-        psa = create_parent_square_array()
-        return psa
+        """
+        The purpose of this function is to create an array which maps each cell to its parent square.
+        The sudoku board has nine 3x3 super squares which constrain the numbers 1-9 only being used once in that
+        square. I implement this by giving each cell an address of its parent square.
+
+        :return:numpy array of 9 by 9 where each element is the letter of the parent square.
+        :rtype:np.array(str)
+        """
+
+        # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        # For something on this scale, tests have shown that a straight reading of numbers in code where the value
+        # is known is faster than any looping.  This is also wrapped in a lru_cache because the value is static and
+        # we don't need to re-invent each time we call.
+        # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        parent_square_array = np.zeros(shape=(9, 9), dtype=str)
+
+        # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        # I wonder if doing this is  'pythonic' - someone can comment if they think it is or not.
+        # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        # a
+        parent_square_array[0, 0] = parent_square_array[0, 1] = parent_square_array[0, 2] = 'a'
+        parent_square_array[1, 0] = parent_square_array[1, 1] = parent_square_array[1, 2] = 'a'
+        parent_square_array[2, 0] = parent_square_array[2, 1] = parent_square_array[2, 2] = 'a'
+
+        # b
+        parent_square_array[0, 3] = parent_square_array[0, 4] = parent_square_array[0, 5] = 'b'
+        parent_square_array[1, 3] = parent_square_array[1, 4] = parent_square_array[1, 5] = 'b'
+        parent_square_array[2, 3] = parent_square_array[2, 4] = parent_square_array[2, 5] = 'b'
+
+        # c
+        parent_square_array[0, 6] = parent_square_array[0, 7] = parent_square_array[0, 8] = 'c'
+        parent_square_array[1, 6] = parent_square_array[1, 7] = parent_square_array[1, 8] = 'c'
+        parent_square_array[2, 6] = parent_square_array[2, 7] = parent_square_array[2, 8] = 'c'
+
+        # d
+        parent_square_array[3, 0] = parent_square_array[3, 1] = parent_square_array[3, 2] = 'd'
+        parent_square_array[4, 0] = parent_square_array[4, 1] = parent_square_array[4, 2] = 'd'
+        parent_square_array[5, 0] = parent_square_array[5, 1] = parent_square_array[5, 2] = 'd'
+
+        # e
+        parent_square_array[3, 3] = parent_square_array[3, 4] = parent_square_array[3, 5] = 'e'
+        parent_square_array[4, 3] = parent_square_array[4, 4] = parent_square_array[4, 5] = 'e'
+        parent_square_array[5, 3] = parent_square_array[5, 4] = parent_square_array[5, 5] = 'e'
+
+        # f
+        parent_square_array[3, 6] = parent_square_array[3, 7] = parent_square_array[3, 8] = 'f'
+        parent_square_array[4, 6] = parent_square_array[4, 7] = parent_square_array[4, 8] = 'f'
+        parent_square_array[5, 6] = parent_square_array[5, 7] = parent_square_array[5, 8] = 'f'
+
+        # g
+        parent_square_array[6, 0] = parent_square_array[6, 1] = parent_square_array[6, 2] = 'g'
+        parent_square_array[7, 0] = parent_square_array[7, 1] = parent_square_array[7, 2] = 'g'
+        parent_square_array[8, 0] = parent_square_array[8, 1] = parent_square_array[8, 2] = 'g'
+
+        # h
+        parent_square_array[7, 3] = parent_square_array[7, 4] = parent_square_array[7, 5] = 'h'
+        parent_square_array[6, 3] = parent_square_array[6, 4] = parent_square_array[6, 5] = 'h'
+        parent_square_array[8, 3] = parent_square_array[8, 4] = parent_square_array[8, 5] = 'h'
+
+        # i
+        parent_square_array[6, 6] = parent_square_array[6, 7] = parent_square_array[6, 8] = 'i'
+        parent_square_array[7, 6] = parent_square_array[7, 7] = parent_square_array[7, 8] = 'i'
+        parent_square_array[8, 6] = parent_square_array[8, 7] = parent_square_array[8, 8] = 'i'
+
+        return parent_square_array
 
 
 class NineRange:
@@ -194,14 +123,69 @@ class NineRange:
     """
 
     @staticmethod
+    @lru_cache(maxsize=3)
     def nine_range():
-        nr = np.arange(0, 9).astype(np.uint8)
+        uate = np.uint8
+        nr = np.array((uate(0), uate(1), uate(2), uate(3), uate(4), uate(5), uate(6), uate(7), uate(8),))
+        return nr
+
+
+class TenRange:
+    """
+    The purpose fo this class is to wrap the nine range
+    """
+
+    @staticmethod
+    @lru_cache(maxsize=3)
+    def ten_range():
+        uate = np.uint8
+        nr = np.array((uate(0), uate(1), uate(2), uate(3), uate(4), uate(5), uate(6), uate(7), uate(8), uate(9)))
         return nr
 
 
 class NeighborListDictionary:
+    """
+    The purpose fo this class is to wrap the neighbor list dictionary method.
+    """
 
     @staticmethod
-    def neighbor_list_dictionary():
-        nld = create_neighbor_list_dictionary()
-        return nld
+    @lru_cache(maxsize=3)
+    def neighbor_list_dictionary() -> dict:
+        """
+        The purpose of this function is to create a dictionary where the keys are a tuple of the row and column,
+        and the values are a list of all cells with the same parent block (a..i)
+        :return:dictionary where the keys are a board coordinate and the value is parent block designator
+        :rtype:dict
+        """
+
+        coordinates_points_list = CoordinatesList.coordinates_list()
+        patent_square_array = PatentSquareArray.patent_square_array()
+        # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        # Create collector list and iterate through the coordinate points list
+        # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        neighbor_list_dict = dict()
+        for anltc_row, anltc_col in coordinates_points_list:
+            neighbor_collector_list = list()
+            serving_cell_letter = patent_square_array[anltc_row, anltc_col]
+            nr = NineRange.nine_range()
+            for neighbor_row in nr:
+                for neighbor_col in nr:
+                    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                    # Avoid adding self as neighbor
+                    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                    if (neighbor_row == anltc_row) and (neighbor_col == anltc_col):
+                        continue
+
+                    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                    # Get the name of the big block this cell belongs to
+                    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                    neighbor_letter = patent_square_array[neighbor_row, neighbor_col]
+                    if neighbor_letter == serving_cell_letter:
+                        neighbor_collector_list.append((neighbor_row, neighbor_col))
+
+            # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            # Store the neighbor list as a tuple for memory efficiency
+            # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            neighbor_list_dict[(anltc_row, anltc_col)] = tuple(neighbor_collector_list)
+
+        return neighbor_list_dict

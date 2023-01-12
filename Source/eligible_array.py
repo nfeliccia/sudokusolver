@@ -2,6 +2,8 @@ import typing
 
 import numpy as np
 
+from Source.sudoku_utilities import TenRange
+
 
 class EligibleNumbers:
     """
@@ -15,15 +17,20 @@ class EligibleNumbers:
     array_all_true = np.array([0, 1, 1, 1, 1, 1, 1, 1, 1, 1, ], dtype=np.uint8)
     array_all_false = np.array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ], dtype=np.uint8)
 
+    def __repr__(self):
+        en_repr = str(self.get_values())
+        return en_repr
+
     def __init__(self):
         self.base_array = self.array_all_true.copy()
 
     def get_values(self):
         """
-        The purpose of this function is to get the indices of the True values in the array.
+        The purpose of this function is to get the indices of the True values in the array, indicating which
+        numbers are in the eligible list.
         :return:
         """
-        values = np.array([x for x in np.arange(0, 10) if self.base_array[x]], dtype=np.uint8)
+        values = np.array([x for x in TenRange.ten_range() if self.base_array[x]], dtype=np.uint8)
         return values
 
     def reset(self) -> np.array:
@@ -58,10 +65,14 @@ class EligibleNumbers:
         :return:
         """
 
+        # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        # Check for an error condition where all values have been eliminated
+        # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         if self.base_array.sum() == 0:
-            raise ValueError('shithitting ')
+            raise ValueError(' eliminate_value -current values sum is 0')
 
-        self.base_array[to_eliminate] = 0
+        if self.base_array[to_eliminate]:
+            self.base_array[to_eliminate] = np.uint8(0)
 
     def number_of_eligible_values(self):
         noev = len(self.get_values())
@@ -73,9 +84,16 @@ class EligibleNumbers:
         :param to_eliminate:
         :return:
         """
-        if self.number_of_eligible_values()==0:
+        # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        # If the remaining unknowns are 0 we've got a condition we shouldn't have  so raised an error
+        # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        if self.number_of_eligible_values() == 0:
             raise ValueError("SHTF")
-        to_eliminate = [np.uint8(x) for x in to_eliminate]
+
+        # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        # Iteratively iterate the values.
+        # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        to_eliminate = tuple(np.uint8(x) for x in to_eliminate)
         for x in to_eliminate:
             self.eliminate_value(to_eliminate=x)
 
@@ -97,6 +115,6 @@ class EligibleNumbers:
         one number left, so when you sum the flags for each number they'll add to 1.
         :return:
         """
-        bas= self.base_array.sum()
+        bas = self.base_array.sum()
         af = bas == np.uint8(1)
         return af

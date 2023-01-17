@@ -119,14 +119,35 @@ class PatentSquareArray:
 
 class NineRange:
     """
-    The purpose fo this class is to wrap the nine range
+    The purpose fo this class is to wrap the nine range, and allow a specific number to be skipped in it.
     """
 
     @staticmethod
-    @lru_cache(maxsize=3)
-    def nine_range():
+    @lru_cache(maxsize=11)
+    def nine_range(skip: int = None):
+        """
+        The purpose of this function is to create a range from 0 to 8 for running the index of the sudoku array.
+        It also allows one number to be removed from the array, passed along by the skip parameter.
+        :param skip: Number to remove from the array
+        :return: np.array(0-8).astype(np.uint8)
+        """
+        # ~~~~~~~~~~~~~~~~
+        # Alias np.uint8
+        # ~~~~~~~~~~~~~~~~
         uate = np.uint8
-        nr = np.array((uate(0), uate(1), uate(2), uate(3), uate(4), uate(5), uate(6), uate(7), uate(8),))
+
+        # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        # Check for invalid index to delete
+        # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        if skip is not None:
+            if skip > 8:
+                skip = None
+
+        if skip is None:
+            nr = np.array((uate(0), uate(1), uate(2), uate(3), uate(4), uate(5), uate(6), uate(7), uate(8),))
+        else:
+            nr = NineRange.nine_range(skip=None)
+            nr = np.delete(nr, skip)
         return nr
 
 

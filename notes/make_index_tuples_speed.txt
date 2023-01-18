@@ -1,0 +1,16 @@
+Question
+Is it faster to read a list of tuples from the interpreter or create them using itertools.product
+
+Trials 100000 Making from interpreter read 0.018759200000204146	making from itertools 0.018741999985650182
+
+Trials 100000 Making from interpreter read 0.01865779992658645	making from itertools 0.01828910002950579
+Mit Advantage -3.6869989708065987e-09 per run
+
+mit_array =np.array(mit_collector).mean()
+print(f"Trials {trials} Making from interpreter read {mit_duration}\tmaking from itertools {git_duration}")
+print(f"Mit Advantage {mit_advantage}")
+print(f"average advantage {mit_array}")
+
+No significant advantage to reading code instead of generating
+
+http://zwmiller.com/blogs/python_data_structure_speed.html

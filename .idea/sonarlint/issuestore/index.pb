@@ -1,6 +1,4 @@
 
-L
-tests/test_eligible_array.py,3\0\30611f8b70765f94abc062f8dd7ba375436892fa
 \
 ,.idea/inspectionProfiles/Project_Default.xml,4\9\496a238a6afa168dbaf6efd37bb459331589579c
 ^

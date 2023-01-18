@@ -4,8 +4,9 @@ This function is the driver for solving a sudoku puzzle.
 import time
 from pathlib import Path
 
-from Source.copytech_with_tim_version import timsolver
-from Source.sudoku_board import SudokuBoard
+from stuff_tried_but_not_used.copytech_with_tim_version import timsolver
+from stuff_tried_but_not_used.sudoku_board import SudokuBoard
+
 from Source.sudoku_loader import load_puzzle
 
 board_array = load_puzzle(Path(r"F:\sudokusolver\puzzle_0003.xlsx"))

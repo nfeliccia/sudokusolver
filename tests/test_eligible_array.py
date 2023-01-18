@@ -1,6 +1,6 @@
 import numpy as np
 
-from Source.eligible_array import EligibleNumbers
+from stuff_tried_but_not_used.eligible_array import EligibleNumbers
 
 
 def test_eligible_numbers_initialization():

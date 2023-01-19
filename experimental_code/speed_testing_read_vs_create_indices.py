@@ -4,7 +4,6 @@ from functools import lru_cache
 from typing import Tuple
 
 import numpy as np
-
 import sudoku_utilities as su
 
 

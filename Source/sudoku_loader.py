@@ -4,10 +4,12 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
+from Source.nic_path import NicPath
+
 
 def load_puzzle(puzzle_path: Path | str = None):
     if isinstance(puzzle_path, str):
-        puzzle_path = Path(puzzle_path)
+        puzzle_path = NicPath(puzzle_path)
 
     if puzzle_path.suffix == '.xlsx':
         lp_excel_reader = pd.ExcelFile(puzzle_path, engine='openpyxl')

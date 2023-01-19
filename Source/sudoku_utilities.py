@@ -6,12 +6,12 @@ import numpy as np
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Create array from 1-9 representing the possible numbers in a sudoku square
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-main_nine_array = np.array((1, 2, 3, 4, 5, 6, 7, 8, 9), dtype=np.uint8)
+main_nine_array = np.arange(1, 10, dtype=np.uint8)
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Create an array to represent the indices 0-8 ( 9 squares zero based python)
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-index_array = np.array((0, 1, 2, 3, 4, 5, 6, 7, 8), dtype=np.uint8)
+index_array = np.arange(0, 9, dtype=np.uint8)
 
 
 @lru_cache(maxsize=3)

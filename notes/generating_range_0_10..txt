@@ -1,0 +1,38 @@
+I wanted to find the fastest way to get the range 0 to 10, since that is so often used in this 
+
+I tried 4 methods,
+
+1) Generating from a typed list. 
+numpy_array = np.array((1, 2, 3, 4, 5, 6, 7, 8, 9), dtype=np.uint8)
+
+2) generating from an array
+
+numpy_arrange_array = np.arange(1, 10, dtype=np.uint8)
+
+3) reading  an import
+from sudoku_utilities import main_nine_array
+for i in range(0, limit):
+    some_nine_array = main_nine_array
+
+4) Native Python 
+  some_nine_array = range(0, 10)
+  
+  
+ Here are the results. time in ms. 
+ 
+Generating numpy from a typed list 145.50620003137738
+Generating numpy from arange 99.69409997574985
+reading from an import  11.43919990863651     with import time of 1.580999931320548
+Native Python time 32.5105000520125
+
+    typed    arange    simple_read    import_time    native_python
+0    144.807    110.528    6.143    1.718    22.225
+1    144.582    109.271    4.443    0.017    22.197
+2    144.039    109.737    4.573    0.016    22.181
+3    144.129    109.124    4.529    0.01    22.192
+4    143.855    108.683    4.32    0.014    22.188
+5    144.401    109.023    4.27    0.015    27.163
+6    142.529    108.532    4.505    0.018    22.209
+7    143.448    109.058    4.208    0.005    21.02
+8    122.567    92.704    3.847    0.013    18.848
+9    122.242    93.092    3.717    0.01    18.82

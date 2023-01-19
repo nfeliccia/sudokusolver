@@ -7,6 +7,7 @@ from typing import Tuple
 import numpy as np
 
 import sudoku_utilities as su
+from Source.nic_path import NicPath
 
 
 def array_whack_a_number(in_array: np.array = None, number_to_whack: int = 0):
@@ -199,7 +200,7 @@ def check_board_for_violations(in_board: np.array = None):
     :return: True  if  Violations found.
     """
     cbfv_board = in_board
-    value_cells = get_coordinates_of_value_cells(in_board=cbfv_board)
+    value_cells = su.get_index_tuples()
     valid_array = np.array(
         [check_insertion_value_is_valid(in_board=cbfv_board, in_coord=value_cell, test_num=cbfv_board[value_cell]) for
          value_cell in value_cells])
@@ -242,19 +243,12 @@ def solve_nic(in_board: np.array = None):
     return False
 
 
-the_loaded_puzzle = np.array(
-    [[0, 0, 7, 0, 1, 0, 0, 0, 0], [4, 0, 0, 0, 5, 0, 1, 2, 6], [0, 2, 1, 0, 3, 6, 9, 0, 7], [0, 1, 5, 0, 0, 7, 0, 0, 4],
-     [0, 0, 3, 0, 0, 0, 7, 0, 0], [6, 0, 0, 5, 0, 0, 2, 1, 0], [2, 0, 6, 8, 9, 0, 3, 7, 0], [7, 3, 4, 0, 6, 0, 0, 0, 9],
-     [0, 0, 0, 0, 7, 0, 6, 0, 0]])
-board = np.array(
-    [[7, 8, 0, 4, 0, 0, 1, 2, 0], [6, 0, 0, 0, 7, 5, 0, 0, 9], [0, 0, 0, 6, 0, 1, 0, 7, 8], [0, 0, 7, 0, 4, 0, 2, 6, 0],
-     [0, 0, 1, 0, 5, 0, 9, 3, 0], [9, 0, 4, 0, 6, 0, 0, 0, 5], [0, 7, 0, 3, 0, 0, 0, 1, 2], [1, 2, 0, 0, 0, 7, 4, 0, 0],
-     [0, 4, 9, 2, 0, 6, 0, 0, 7]]).astype(np.uint8)
+the_loaded_puzzle = NicPath(r"..\puzzles\puzzle_0008.xlsx").read_excel(load_multiple_sheets=True, header=None)
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Create a blank board which is a 9x9 grid of arrays from 1-9 signifying all eligible numbers.
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-sudoku_board_a = board
+sudoku_board_a = the_loaded_puzzle
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Populate the board by reference to the loaded puzzle. Iterate through board coordinates
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

@@ -7,7 +7,7 @@ from typing import Tuple
 import numpy as np
 
 import sudoku_utilities as su
-from Source.nic_path import NicPath
+from utils.nic_path import NicPath
 
 
 def array_whack_a_number(in_array: np.array = None, number_to_whack: int = 0):
